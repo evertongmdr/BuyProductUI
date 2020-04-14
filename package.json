@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.9.9",
+    "@material-ui/icons": "^4.9.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -10,10 +12,16 @@
     "@types/node": "^12.12.34",
     "@types/react": "^16.9.32",
     "@types/react-dom": "^16.9.6",
+    "@unicef/material-ui-currency-textfield": "github:unicef/material-ui-currency-textfield",
+    "formik": "^2.1.4",
     "react": "^16.13.1",
+    "react-currency": "^2.0.0",
     "react-dom": "^16.13.1",
+    "react-number-format": "^4.4.1",
     "react-scripts": "3.4.1",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "uninstall": "0.0.0",
+    "yup": "^0.28.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -35,5 +43,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/yup": "^0.26.35"
   }
 }

@@ -1,0 +1,25 @@
+.container{
+
+    background-color:white;
+    width: 92%;
+    
+    margin: 10rem auto;
+    border-radius: 7px;
+    padding:10px;
+    box-shadow: 0 0 1.8rem rgb(0,0,0,.15);
+    max-width: 30rem;
+}
+
+@media only screen and (max-width: 500px) {
+    .container{
+        margin: 3rem auto;
+        max-width: 40rem;
+        width: 100%;
+        
+    }
+}
+
+
+
+
+
