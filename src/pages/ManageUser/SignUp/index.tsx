@@ -57,6 +57,7 @@ interface User {
   confirmPassword: string;
 }
 const SignUp: React.FC = () => {
+  
   const initialValues: User = {
     firstName: "",
     lastName: "",
@@ -74,8 +75,7 @@ const SignUp: React.FC = () => {
     }
     return users;
   }
-  
-
+ 
   const onSave = (user: User) => {
     const users = getUserStorate();
 

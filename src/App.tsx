@@ -8,16 +8,20 @@ import RegisterProduct from './pages/ManageProduct/RegisterProduct/index';
 import SearchProduct from './pages/ManageProduct/SearchProduct/index';
 import SearchUser from "./pages/ManageUser/SearchUser";
 import Layout from './pages/Layout/index';
+
 function App() {
 
   return (
-    // <Layout/>
+
+  
+     <Layout/>
+  
     // <SignUp/>
 
     // <SearchUser/>
     // <RegisterProduct/>
 
-    <SearchProduct/>
+    // <SearchProduct/>
   );
 }
 

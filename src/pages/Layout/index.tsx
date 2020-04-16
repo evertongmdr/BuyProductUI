@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useEffect} from "react";
 import clsx from "clsx";
 import {
   makeStyles,
@@ -20,9 +20,18 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
-import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
+import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
+import AddCircleIcon from "@material-ui/icons/AddCircle";
 import "./index.css";
+
+import SearchProduct from "../ManageProduct/SearchProduct/index";
+import SignIn from "../SignIn/index";
+import SignUp from "../ManageUser/SignUp/index";
+import RegisterProduct from '../ManageProduct/RegisterProduct/index';
+import { Route, Switch } from "react-router-dom";
+
+import {RouteComponentProps,withRouter} from 'react-router-dom';
+
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -84,17 +93,66 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-export default function PersistentDrawerLeft() {
+interface StateProps {
+  open: boolean;
+  pageTitle: string;
+  formType: string
+}
+const Layout:React.FC<RouteComponentProps> = (props) =>{
+
   const classes = useStyles();
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const [info, setInfo] = React.useState<StateProps>({
+    open: false,
+    pageTitle: 'Sign In',
+    formType: 'Register'
+  });
+
+  
+  useEffect(()=>{
+    switch(props.location.pathname){
+      
+      case '/signin':
+        changePageTitle('Sign In');
+      break;
+
+      case '/signup':
+        changePageTitle('Sign Up');
+      break;
+
+      case '/product':
+        changePageTitle('Product');
+      break;
+
+      case '/register-product':
+      changePageTitle('Register Product');
+      break;
+
+      case '/update-product':
+        changePageTitle('Update Product');
+        break;
+
+    }
+
+  },[props.location.pathname]);
+
+  const changePageTitle = (title: string)=>{
+    
+    setInfo(oldInfos => ({...oldInfos, pageTitle: title}));
   };
 
+  const handleDrawerOpen = () => {
+    const newInfo = { ...info };
+    newInfo.open = true;
+    setInfo(newInfo);
+  };
+
+
   const handleDrawerClose = () => {
-    setOpen(false);
+    const newInfo = { ...info };
+    newInfo.open = false;
+    setInfo(newInfo);
   };
 
   return (
@@ -103,7 +161,7 @@ export default function PersistentDrawerLeft() {
       <AppBar
         position="fixed"
         className={clsx(classes.appBar, {
-          [classes.appBarShift]: open,
+          [classes.appBarShift]: info.open,
         })}
       >
         <Toolbar>
@@ -112,12 +170,12 @@ export default function PersistentDrawerLeft() {
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
-            className={clsx(classes.menuButton, open && classes.hide)}
+            className={clsx(classes.menuButton, info.open && classes.hide)}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap>
-            Persistent drawer
+            {info.pageTitle}
           </Typography>
         </Toolbar>
       </AppBar>
@@ -125,7 +183,7 @@ export default function PersistentDrawerLeft() {
         className={classes.drawer}
         variant="persistent"
         anchor="left"
-        open={open}
+        open={info.open}
         classes={{
           paper: classes.drawerPaper,
         }}
@@ -147,15 +205,14 @@ export default function PersistentDrawerLeft() {
             <ListItemText primary="Pedidos" />
           </ListItem>
 
-          <ListItem button>
+          <ListItem button onClick={() => props.history.push('/product')}>
             <ListItemIcon>
-            <AddCircleIcon></AddCircleIcon>
+              <AddCircleIcon></AddCircleIcon>
             </ListItemIcon>
             <ListItemText primary="Product" />
           </ListItem>
 
-      
-          <ListItem button>
+          <ListItem button onClick={() => props.history.push('/signin')}>
             <ListItemIcon>
               <ArrowBackIosIcon></ArrowBackIosIcon>
             </ListItemIcon>
@@ -165,11 +222,20 @@ export default function PersistentDrawerLeft() {
       </Drawer>
       <main
         className={clsx(classes.content, {
-          [classes.contentShift]: open,
+          [classes.contentShift]: info.open,
         })}
       >
-    
+        <Switch>
+          <Route exact path="/" component={SignIn} />
+          <Route path="/signin" component={SignIn}/>
+          <Route path="/signup" component={SignUp} />
+          <Route path="/product" component={SearchProduct} />
+          <Route path="/register-product" component={RegisterProduct} />
+          <Route path="/update-product" component={RegisterProduct} />
+        </Switch>
       </main>
     </div>
   );
 }
+
+export default withRouter(Layout);

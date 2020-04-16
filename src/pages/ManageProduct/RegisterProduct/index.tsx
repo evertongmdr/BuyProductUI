@@ -1,30 +1,35 @@
-import React from "react";
-import "./index.css";
-import { Button, ListItem, List, TextField } from "@material-ui/core"
-import { Formik, useField, FieldAttributes, Form } from "formik";
+import React, { useContext } from "react";
+import {
+  TextField,
+  List,
+  ListItem,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  PaperProps,
+  Paper,
+} from "@material-ui/core";
 
-import {IProduct} from '../../../models/Interfaces';
-
+import {
+  Formik,
+  useField,
+  FieldAttributes,
+  Form,
+  useFormikContext,
+} from "formik";
 import * as yup from "yup";
-
+import { IProduct } from "../../../models/Interfaces";
+import FormContext from "../../../store//FormContext";
+import Draggable from "react-draggable";
+import "./index.css";
 
 interface MyAttibutes {
   multiline?: boolean;
   rows?: number;
 }
-
-// const currencyFormatter = function (value: string) {
-    
-//   const val = parseFloat(value);
-  
-//   const amount = new Intl.NumberFormat("pt-BR", {
-//     style: "currency",
-//     currency: "BRL",
-//     minimumFractionDigits: 2
-//   }).format(val / 100);
-  
-//   return amount
-// }
 
 const MyTextField: React.FC<FieldAttributes<MyAttibutes>> = ({
   placeholder,
@@ -34,7 +39,7 @@ const MyTextField: React.FC<FieldAttributes<MyAttibutes>> = ({
   ...props
 }) => {
   const [field, meta] = useField<MyAttibutes>(props);
-  const errorText = meta.error && meta.touched ? meta.error : '';
+  const errorText = meta.error && meta.touched ? meta.error : "";
   return (
     <TextField
       autoComplete="off"
@@ -50,7 +55,6 @@ const MyTextField: React.FC<FieldAttributes<MyAttibutes>> = ({
   );
 };
 
-
 const validationSchema = yup.object({
   name: yup.string().required(" ").min(1, "Too short!").max(50, "Too long!"),
   descrition: yup.string().max(100, "Too long!"),
@@ -64,16 +68,76 @@ const validationSchema = yup.object({
     .positive("Price must have a postive number"),
 });
 
-const SignUp: React.FC = () => {
-  const initialValues: IProduct = {
+const RegisterProduct: React.FC = (props: any) => {
+  const formType = useContext(FormContext);
+  const [open, setOpen] = React.useState(false);
+
+  let initialValues: IProduct = {
     name: "",
     descrition: "",
     quantity: "",
     price: "",
   };
 
+  if (formType.type === "Update") {
+    initialValues = formType.content as IProduct;
+  }
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  function PaperComponent(props: PaperProps) {
+    return (
+      <Draggable
+        handle="#draggable-dialog-title"
+        cancel={'[class*="MuiDialogContent-root"]'}
+      >
+        <Paper {...props} />
+      </Draggable>
+    );
+  }
+
+  const SetSubmitForm: React.FC = () => {
+    const { submitForm } = useFormikContext();
+    return (
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        PaperComponent={PaperComponent}
+        aria-labelledby="draggable-dialog-title"
+      >
+        <DialogTitle style={{ cursor: "move" }} id="draggable-dialog-title">
+          Product Update
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>Do you want Product Update ?</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button autoFocus onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              handleClose();
+
+              submitForm();
+            }}
+            color="primary"
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
   const getProductStorate = () => {
-    let products =  [];
+    let products = [];
 
     if (localStorage.getItem("products")) {
       // ! garante que nunca vai retornar um valornulo
@@ -95,9 +159,7 @@ const SignUp: React.FC = () => {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={(produtc) => {
-          onSave(produtc);
-
-          console.log(produtc);
+          console.log("saving");
         }}
       >
         {({ errors }) => (
@@ -131,15 +193,19 @@ const SignUp: React.FC = () => {
               <ListItem>
                 <Button
                   disabled={Object.keys(errors).length !== 0}
-                  type="submit"
+                  type={formType.type === "Register" ? "submit" : "button"}
                   fullWidth
                   variant="contained"
                   color="primary"
+                  onClick={() => {
+                    if (formType.type === "Update") handleClickOpen();
+                  }}
                 >
-                  SIGN UP
+                  {formType.type === "Register" ? "SAVE" : "UPDATE"}
                 </Button>
               </ListItem>
             </List>
+            <SetSubmitForm />
           </Form>
         )}
       </Formik>
@@ -147,4 +213,18 @@ const SignUp: React.FC = () => {
   );
 };
 
-export default SignUp;
+export default RegisterProduct;
+/*
+const currencyFormatter = function (value: string) {
+    
+  const val = parseFloat(value);
+  
+  const amount = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2
+  }).format(val / 100);
+  
+  return amount
+}
+*/

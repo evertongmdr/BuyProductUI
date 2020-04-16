@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import "./index.css";
 import { IProduct } from "../../../models/Interfaces";
 import {
@@ -11,15 +11,17 @@ import {
   List,
 } from "@material-ui/core";
 
+import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
+import Paper from "@material-ui/core/Paper";
+import InputBase from "@material-ui/core/InputBase";
+import Divider from "@material-ui/core/Divider";
+import IconButton from "@material-ui/core/IconButton";
+import SearchIcon from "@material-ui/icons/Search";
 
-import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
-import InputBase from '@material-ui/core/InputBase';
-import Divider from '@material-ui/core/Divider';
-import IconButton from '@material-ui/core/IconButton';
-import SearchIcon from '@material-ui/icons/Search';
+import FormContext from "../../../store/FormContext";
 
-interface IEventsProducts extends IProduct {
+interface ProductProps {
+  product: IProduct;
   clickedView: () => void;
   clickedEdit: () => void;
 }
@@ -29,60 +31,14 @@ export interface SimpleDialogProps {
   onClose: (value: string) => void;
   product: IProduct;
 }
-const Product: React.FC<any> = (props) => {
-  return (
-    <React.Fragment>
-      <ListItem className="item">
-        <ListItemText
-          primary={props.name}
-          secondary={
-            <React.Fragment>
-              <Typography
-                component="span"
-                variant="body2"
-                //   className={classes.inline}
-                color="textPrimary"
-              >
-                Quantity:
-              </Typography>
-              {props.quantity}
-            </React.Fragment>
-          }
-        />
-
-        <div style={{ width: "100%" }}>
-          <Button
-            color="primary"
-            variant="outlined"
-            style={{ margin: "0 5px 0 0" }}
-            onClick={props.clickedView}
-            // onClick={() => console.log(props.product)}
-          >
-            Ver
-          </Button>
-
-          <Button
-            onClick={props.clickedEdit}
-            color="primary"
-            variant="outlined"
-          >
-            Editar
-          </Button>
-        </div>
-      </ListItem>
-
-      <Divider style={{ backgroundColor: "black" }} />
-    </React.Fragment>
-  );
-};
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      padding: '2px 4px',
-      display: 'flex',
-      alignItems: 'center',
-      width: '99%',
+      padding: "2px 4px",
+      display: "flex",
+      alignItems: "center",
+      width: "99%",
     },
     input: {
       marginLeft: theme.spacing(1),
@@ -90,8 +46,8 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     iconButton: {
       padding: 10,
-    }
-  }),
+    },
+  })
 );
 
 const SimpleDialog: React.FC<SimpleDialogProps> = (props) => {
@@ -119,11 +75,61 @@ const SimpleDialog: React.FC<SimpleDialogProps> = (props) => {
     </Dialog>
   );
 };
-const SearchUser: React.FC = () => {
 
+const Product: React.FC<ProductProps> = (props) => {
+  return (
+    <React.Fragment>
+      <ListItem className="item">
+        <ListItemText
+          primary={props.product.name}
+          secondary={
+            <React.Fragment>
+              <Typography
+                component="span"
+                variant="body2"
+                //   className={classes.inline}
+                color="textPrimary"
+              >
+                Quantity:
+              </Typography>
+              {props.product.quantity}
+            </React.Fragment>
+          }
+        />
+
+        <div style={{ width: "100%" }}>
+          <Button
+            color="primary"
+            variant="outlined"
+            style={{ margin: "0 5px 0 0" }}
+            onClick={props.clickedView}
+            
+          >
+            Ver
+          </Button>
+
+          <Button
+            // onClick={props.clickedEdit}
+            color="primary"
+            variant="outlined"
+            onClick={props.clickedEdit}
+          >
+            Editar
+          </Button>
+        </div>
+      </ListItem>
+
+      <Divider style={{ backgroundColor: "black" }} />
+    </React.Fragment>
+  );
+};
+
+const SearchProduct: React.FC = (props: any) => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const [product, setProduct] = useState<IProduct>({ name: "" });
+
+  const formContext = useContext(FormContext);
 
   const getProductStorate = function (): Array<IProduct> {
     let products = [];
@@ -138,36 +144,45 @@ const SearchUser: React.FC = () => {
   const handlerOpen = (product: IProduct) => {
     setOpen(true);
     setProduct(product);
-    console.log("salve");
   };
 
   const products = getProductStorate().map((product) => (
     <Product
       product={product}
-      name={product.name}
-      quantity={product.quantity}
       clickedView={() => handlerOpen(product)}
-      clickedEdit={() => setOpen(false)}
+      clickedEdit={() => {
+        formContext.type = "Update";
+        formContext.content = product;
+
+        props.history.push("/update-product");
+      }}
     />
   ));
 
   return (
     <div className="container">
       <div className="align-right">
-        <Button variant="contained" color="primary">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            formContext.type = "Register";
+            props.history.push("/register-product");
+          }}
+        >
           New Product
         </Button>
       </div>
       <Paper component="form" className={classes.root}>
-    
-      <InputBase
-        className={classes.input}
-        placeholder="Search Products"
-      />
-      <IconButton type="submit" className={classes.iconButton} aria-label="search">
-        <SearchIcon />
-      </IconButton>
-    </Paper>
+        <InputBase className={classes.input} placeholder="Search Products" />
+        <IconButton
+          type="submit"
+          className={classes.iconButton}
+          aria-label="search"
+        >
+          <SearchIcon />
+        </IconButton>
+      </Paper>
       {products}
       <SimpleDialog
         product={product}
@@ -178,4 +193,4 @@ const SearchUser: React.FC = () => {
   );
 };
 
-export default SearchUser;
+export default SearchProduct;
