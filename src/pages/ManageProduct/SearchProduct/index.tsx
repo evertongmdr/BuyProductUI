@@ -18,7 +18,7 @@ import Divider from "@material-ui/core/Divider";
 import IconButton from "@material-ui/core/IconButton";
 import SearchIcon from "@material-ui/icons/Search";
 
-import FormContext from "../../../store/FormContext";
+import FormContext from "../../../store/contexts/FormContext";
 
 interface ProductProps {
   product: IProduct;
@@ -129,7 +129,7 @@ const SearchProduct: React.FC = (props: any) => {
   const [open, setOpen] = useState(false);
   const [product, setProduct] = useState<IProduct>({ name: "" });
 
-  const formContext = useContext(FormContext);
+  const {setInfoForm} = useContext(FormContext);
 
   const getProductStorate = function (): Array<IProduct> {
     let products = [];
@@ -151,8 +151,10 @@ const SearchProduct: React.FC = (props: any) => {
       product={product}
       clickedView={() => handlerOpen(product)}
       clickedEdit={() => {
-        formContext.type = "Update";
-        formContext.content = product;
+        
+        setInfoForm({type: 'Update',
+        data: product
+        });
 
         props.history.push("/update-product");
       }}
@@ -166,7 +168,11 @@ const SearchProduct: React.FC = (props: any) => {
           variant="contained"
           color="primary"
           onClick={() => {
-            formContext.type = "Register";
+
+            setInfoForm({type: 'Register',
+            data: {}
+            });
+
             props.history.push("/register-product");
           }}
         >

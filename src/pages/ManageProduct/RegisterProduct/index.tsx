@@ -22,7 +22,7 @@ import {
 } from "formik";
 import * as yup from "yup";
 import { IProduct } from "../../../models/Interfaces";
-import FormContext from "../../../store//FormContext";
+import FormContext from "../../../store/contexts/FormContext";
 import Draggable from "react-draggable";
 import "./index.css";
 
@@ -68,8 +68,14 @@ const validationSchema = yup.object({
     .positive("Price must have a postive number"),
 });
 
+interface FormContextData {
+  type: string;
+  data: {};
+}
+
 const RegisterProduct: React.FC = (props: any) => {
-  const formType = useContext(FormContext);
+  const form = useContext(FormContext);
+
   const [open, setOpen] = React.useState(false);
 
   let initialValues: IProduct = {
@@ -79,8 +85,9 @@ const RegisterProduct: React.FC = (props: any) => {
     price: "",
   };
 
-  if (formType.type === "Update") {
-    initialValues = formType.content as IProduct;
+  if (form.type === "Update") {
+    //initialValues = {...form.data} as IProduct;
+    initialValues = form.data as IProduct;
   }
 
   const handleClickOpen = () => {
@@ -159,6 +166,7 @@ const RegisterProduct: React.FC = (props: any) => {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={(produtc) => {
+          onSave(produtc);
           console.log("saving");
         }}
       >
@@ -193,15 +201,15 @@ const RegisterProduct: React.FC = (props: any) => {
               <ListItem>
                 <Button
                   disabled={Object.keys(errors).length !== 0}
-                  type={formType.type === "Register" ? "submit" : "button"}
+                  type={form.type === "Register" ? "submit" : "button"}
                   fullWidth
                   variant="contained"
                   color="primary"
                   onClick={() => {
-                    if (formType.type === "Update") handleClickOpen();
+                    if (form.type === "Update") handleClickOpen();
                   }}
                 >
-                  {formType.type === "Register" ? "SAVE" : "UPDATE"}
+                  {form.type === "Register" ? "SAVE" : "UPDATE"}
                 </Button>
               </ListItem>
             </List>

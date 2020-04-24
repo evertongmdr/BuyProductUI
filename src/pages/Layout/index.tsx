@@ -1,4 +1,4 @@
-import React,{useEffect} from "react";
+import React, { useEffect } from "react";
 import clsx from "clsx";
 import {
   makeStyles,
@@ -27,10 +27,12 @@ import "./index.css";
 import SearchProduct from "../ManageProduct/SearchProduct/index";
 import SignIn from "../SignIn/index";
 import SignUp from "../ManageUser/SignUp/index";
-import RegisterProduct from '../ManageProduct/RegisterProduct/index';
+import RegisterProduct from "../ManageProduct/RegisterProduct/index";
 import { Route, Switch } from "react-router-dom";
 
-import {RouteComponentProps,withRouter} from 'react-router-dom';
+import { RouteComponentProps, withRouter } from "react-router-dom";
+
+import ManageOrder from "../ManageOrder/index";
 
 const drawerWidth = 240;
 
@@ -96,50 +98,44 @@ const useStyles = makeStyles((theme: Theme) =>
 interface StateProps {
   open: boolean;
   pageTitle: string;
-  formType: string
+  formType: string;
 }
-const Layout:React.FC<RouteComponentProps> = (props) =>{
-
+const Layout: React.FC<RouteComponentProps> = (props) => {
   const classes = useStyles();
   const theme = useTheme();
 
   const [info, setInfo] = React.useState<StateProps>({
     open: false,
-    pageTitle: 'Sign In',
-    formType: 'Register'
+    pageTitle: "Sign In",
+    formType: "Register",
   });
 
-  
-  useEffect(()=>{
-    switch(props.location.pathname){
-      
-      case '/signin':
-        changePageTitle('Sign In');
-      break;
-
-      case '/signup':
-        changePageTitle('Sign Up');
-      break;
-
-      case '/product':
-        changePageTitle('Product');
-      break;
-
-      case '/register-product':
-      changePageTitle('Register Product');
-      break;
-
-      case '/update-product':
-        changePageTitle('Update Product');
+  useEffect(() => {
+    switch (props.location.pathname) {
+      case "/signin":
+        changePageTitle("Sign In");
         break;
 
+      case "/signup":
+        changePageTitle("Sign Up");
+        break;
+
+      case "/product":
+        changePageTitle("Product");
+        break;
+
+      case "/register-product":
+        changePageTitle("Register Product");
+        break;
+
+      case "/update-product":
+        changePageTitle("Update Product");
+        break;
     }
+  }, [props.location.pathname]);
 
-  },[props.location.pathname]);
-
-  const changePageTitle = (title: string)=>{
-    
-    setInfo(oldInfos => ({...oldInfos, pageTitle: title}));
+  const changePageTitle = (title: string) => {
+    setInfo((oldInfos) => ({ ...oldInfos, pageTitle: title }));
   };
 
   const handleDrawerOpen = () => {
@@ -147,7 +143,6 @@ const Layout:React.FC<RouteComponentProps> = (props) =>{
     newInfo.open = true;
     setInfo(newInfo);
   };
-
 
   const handleDrawerClose = () => {
     const newInfo = { ...info };
@@ -198,21 +193,26 @@ const Layout:React.FC<RouteComponentProps> = (props) =>{
           </IconButton>
         </div>
         <List>
-          <ListItem button>
+          <ListItem
+            button
+            onClick={() => {
+              props.history.push("/order");
+            }}
+          >
             <ListItemIcon>
               <AddShoppingCartIcon></AddShoppingCartIcon>
             </ListItemIcon>
-            <ListItemText primary="Pedidos" />
+            <ListItemText primary="Order" />
           </ListItem>
 
-          <ListItem button onClick={() => props.history.push('/product')}>
+          <ListItem button onClick={() => props.history.push("/product")}>
             <ListItemIcon>
               <AddCircleIcon></AddCircleIcon>
             </ListItemIcon>
             <ListItemText primary="Product" />
           </ListItem>
 
-          <ListItem button onClick={() => props.history.push('/signin')}>
+          <ListItem button onClick={() => props.history.push("/signin")}>
             <ListItemIcon>
               <ArrowBackIosIcon></ArrowBackIosIcon>
             </ListItemIcon>
@@ -227,15 +227,19 @@ const Layout:React.FC<RouteComponentProps> = (props) =>{
       >
         <Switch>
           <Route exact path="/" component={SignIn} />
-          <Route path="/signin" component={SignIn}/>
+          <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={SignUp} />
           <Route path="/product" component={SearchProduct} />
-          <Route path="/register-product" component={RegisterProduct} />
+          <Route
+            path="/register-product"
+            component={RegisterProduct}
+          />
           <Route path="/update-product" component={RegisterProduct} />
+          <Route path="/order" component={ManageOrder} />
         </Switch>
       </main>
     </div>
   );
-}
+};
 
 export default withRouter(Layout);
