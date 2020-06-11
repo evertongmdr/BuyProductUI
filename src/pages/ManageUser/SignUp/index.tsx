@@ -1,10 +1,22 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import "./index.css";
-import { Button, ListItem, List, TextField } from "@material-ui/core";
+import {
+  Button,
+  ListItem,
+  List,
+  TextField,
+  CircularProgress,
+} from "@material-ui/core";
 
+import { useHistory } from "react-router-dom";
 import { Formik, useField, FieldAttributes, Form } from "formik";
 
 import * as yup from "yup";
+import { IUser } from "../../../models/Interfaces";
+import Snackbar from "@material-ui/core/Snackbar";
+import MuiAlert from "@material-ui/lab/Alert";
+
+import api from "../../../services/api";
 
 const MyTextField: React.FC<FieldAttributes<{}>> = ({
   placeholder,
@@ -57,7 +69,16 @@ interface User {
   confirmPassword: string;
 }
 const SignUp: React.FC = () => {
-  
+  const history = useHistory();
+  const [isSubmiting, SetIsSubmiting] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<{
+    show: boolean;
+    submited: boolean;
+  }>({
+    show: false,
+    submited: false,
+  });
+
   const initialValues: User = {
     firstName: "",
     lastName: "",
@@ -66,22 +87,19 @@ const SignUp: React.FC = () => {
     confirmPassword: "",
   };
 
-  const getUserStorate = ()=> {
-    let users = Array();
-
-    if (localStorage.getItem("users")) {
-      // ! garante que nunca vai retornar um valornulo
-      users = JSON.parse(localStorage.getItem("users")!);
-    }
-    return users;
-  }
- 
   const onSave = (user: User) => {
-    const users = getUserStorate();
+    api
+      .post("/users", user)
+      .then((response) => {
+        SetIsSubmiting(false);
+        setAlertMessage({ show: true, submited: true });
+      })
+      .catch((err) => {
+        SetIsSubmiting(false);
 
-    users.push(user);
-
-    localStorage.setItem("users",JSON.stringify(users));
+        setAlertMessage({ show: true, submited: false });
+        console.log(err);
+      });
   };
 
   return (
@@ -89,7 +107,8 @@ const SignUp: React.FC = () => {
       <Formik
         initialValues={initialValues}
         validationSchema={validationSchema}
-        onSubmit={user => {
+        onSubmit={(user) => {
+          SetIsSubmiting(true);
           onSave(user);
         }}
       >
@@ -125,7 +144,7 @@ const SignUp: React.FC = () => {
               </ListItem>
               <ListItem>
                 <Button
-                  disabled={Object.keys(errors).length!=0}
+                  disabled={Object.keys(errors).length !== 0}
                   type="submit"
                   fullWidth
                   variant="contained"
@@ -134,10 +153,52 @@ const SignUp: React.FC = () => {
                   SIGN UP
                 </Button>
               </ListItem>
+              {isSubmiting ? (
+                <ListItem>
+                  <CircularProgress style={{ margin: "auto" }} />
+                </ListItem>
+              ) : null}
             </List>
           </Form>
         )}
       </Formik>
+
+      <Snackbar
+        open={alertMessage.show}
+        autoHideDuration={alertMessage.submited ? 2000 : 4000}
+        onClose={() => {
+          if (alertMessage.submited) {
+            history.push("/signin");
+          } else {
+            setAlertMessage({ ...alertMessage, show: false });
+          }
+        }}
+      >
+        {alertMessage.submited ? (
+          <MuiAlert
+            elevation={6}
+            variant="filled"
+            severity="success"
+            onClose={() => {
+              // essa função é chamada caso o usuário click ne mensagem apresentada
+              setAlertMessage({ ...alertMessage, show: false });
+
+              history.push("/signin");
+            }}
+          >
+            Registered User
+          </MuiAlert>
+        ) : (
+          <MuiAlert
+            elevation={6}
+            variant="filled"
+            severity="error"
+            onClose={() => setAlertMessage({ ...alertMessage, show: false })}
+          >
+            Server Error
+          </MuiAlert>
+        )}
+      </Snackbar>
     </div>
   );
 };

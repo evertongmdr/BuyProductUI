@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useState } from "react";
 import SwipeableViews from "react-swipeable-views";
 import { makeStyles, Theme, useTheme } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
@@ -7,21 +7,23 @@ import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import ChooseProduct from "./ChooseProduct/index";
-import SearchIcon from "@material-ui/icons/Search";
 import "./index.css";
 import {
   ListItem,
   List,
   ListItemText,
-  InputBase,
-  Paper,
-  IconButton,
   Divider,
+  Button,
 } from "@material-ui/core";
 import { IProduct } from "../../models/Interfaces";
 
 import { connect } from "react-redux";
 import { ApplicationState } from "../../store/redux";
+
+import * as ShoppCartActions from "../../store/redux/ducks/shopp-cart/actions";
+import { Dispatch } from "redux";
+import { useAuth } from "../../contexts/auth";
+import api from "../../services/api";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -79,8 +81,11 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 interface Props {
   addedProducts: IProduct[];
+  onRemoverProduct: (id: string) => void;
+  onSearchProducts: (name: string) => void;
 }
 const ManageOrder: React.FC<Props> = (props) => {
+  const { user } = useAuth();
   const classes = useStyles();
   const theme = useTheme();
   const [value, setValue] = useState(0);
@@ -94,24 +99,65 @@ const ManageOrder: React.FC<Props> = (props) => {
   };
 
   const listProducts = props.addedProducts.map((product) => (
-    <>
-    <ListItem>
-      <ListItemText
-        primary={product.name}
-        secondary={
-          <React.Fragment>
-            <Typography component="span" variant="body2" color="textPrimary">
-              Quantity: 
-            </Typography>
-            {product.quantity}
-          </React.Fragment>
-        }
-      />
-    </ListItem>
-    
-    <Divider style={{ backgroundColor: "black" }} />
-    </>
+    <div key={product.id}>
+      <ListItem>
+        <ListItemText
+          primary={product.name}
+          secondary={
+            <React.Fragment>
+              <Typography component="span" variant="body2" color="textPrimary">
+                Quantity: {product.quantity}
+              </Typography>
+
+              <br />
+              <Typography component="span" variant="body2" color="textPrimary">
+                Price:{product.price}
+              </Typography>
+            </React.Fragment>
+          }
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => props.onRemoverProduct(product.id as string)}
+        >
+          remove
+        </Button>
+      </ListItem>
+
+      <Divider style={{ backgroundColor: "black" }} />
+    </div>
   ));
+
+  const total = props.addedProducts.reduce((sum, product) => {
+    return (sum +=
+      parseInt(product.quantity as string) *
+      parseFloat(product.price as string));
+  }, 0);
+
+  const saveOrder = () => {
+    const itens = props.addedProducts.map((product) => {
+      return {
+        id: product.id,
+        quantity: product.quantity,
+      };
+    });
+
+    const order = {
+      userId: user?.id,
+      productsAddedOrder: itens,
+    };
+
+    console.log(order);
+    api
+      .post("/orders", order)
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   return (
     <div className="contain">
@@ -139,9 +185,23 @@ const ManageOrder: React.FC<Props> = (props) => {
           </TabPanel>
 
           <TabPanel value={value} index={1} dir={theme.direction}>
-            <List>
-              {listProducts}
-            </List>
+            <List>{listProducts}</List>
+
+            <Typography
+              component="span"
+              variant="subtitle1"
+              color="textPrimary"
+            >
+              Total:{total}
+            </Typography>
+            <Button
+              style={{ float: "right", marginRight: "16px" }}
+              color="secondary"
+              variant="contained"
+              onClick={saveOrder}
+            >
+              Finalize
+            </Button>
           </TabPanel>
         </SwipeableViews>
       </div>
@@ -155,7 +215,12 @@ const mapStateToProps = (state: ApplicationState) => {
   };
 };
 
-const mapDispatchToProps = () => {
-  return {};
+const mapDispatchToProps = (disptach: Dispatch) => {
+  return {
+    onSearchProducts: (name: string) => {
+      console.log(name);
+      disptach(ShoppCartActions.loadRequest());
+    },
+  };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ManageOrder);

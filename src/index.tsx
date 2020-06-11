@@ -5,13 +5,16 @@ import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import store from "./store/redux/index";
 
-import {FormProvider} from "./store/contexts/FormContext";
+import { FormProvider } from "./contexts/formType";
+import { AuthProvider } from "./contexts/auth";
 
 const app = (
   <Provider store={store}>
     <BrowserRouter>
       <FormProvider>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </FormProvider>
     </BrowserRouter>
   </Provider>

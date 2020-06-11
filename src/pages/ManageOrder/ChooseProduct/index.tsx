@@ -1,4 +1,4 @@
-import React, { Component} from "react";
+import React, { Component, useRef } from "react";
 
 import "./index.css";
 import { IProduct } from "../../../models/Interfaces";
@@ -32,6 +32,9 @@ import { Dispatch } from "redux";
 import * as ShoppCartActions from "../../../store/redux/ducks/shopp-cart/actions";
 
 import { ApplicationState } from "../../../store/redux/index";
+import { Formik, Form } from "formik";
+import CircularProgress from "@material-ui/core/CircularProgress";
+import * as yup from "yup";
 
 const StyledBadge = withStyles((theme: Theme) =>
   createStyles({
@@ -47,18 +50,23 @@ const StyledBadge = withStyles((theme: Theme) =>
 interface State {
   productSelected: IProduct;
   openDialog: boolean;
+  setedQuantity: string;
+  products: JSX.Element[] | null;
 }
 
 interface Props {
   searchedProducts: IProduct[];
-  onSearchProducts: (name: string) => void;
-  onAddProduct:(product:IProduct)=>void;
+  addedProducts: IProduct[];
+  loadingProduct: boolean;
+  onSearchProducts: () => void; 
+  onAddProduct: (product: IProduct) => void;
 }
 
-interface SimpleDialogProps  extends Props {
+interface SimpleDialogProps extends Props {
   open: boolean;
   onClose: () => void;
   product: IProduct;
+  quantity: string;
 }
 
 interface TabPanelProps {
@@ -70,17 +78,37 @@ interface TabPanelProps {
 
 interface ProductProps {
   product: IProduct;
+  addedQuantity: number;
   clickedView: () => void;
 }
 const SimpleDialog: React.FC<SimpleDialogProps> = (props) => {
   const { open } = props;
+  const inputEl = useRef<HTMLInputElement>(null);
 
-  const addProductShoppcart = (event:any) =>{
-    console.log(event);
-    props.onAddProduct(props.product);
-    props.onClose();
-    
+  const productAlreadyAdded = (product: IProduct): boolean =>{
+
+     const pos = props.addedProducts.findIndex(p => p.id === product.id);
+
+    return pos !== -1? true: false;
+      
   }
+  const addProductShoppcart = () => {
+
+    const product = {...props.product, quantity: inputEl.current?.value };
+    if(!productAlreadyAdded(product)) // se o produto não tiver adicionado
+     props.onAddProduct(product);
+    
+    props.onClose();
+  };
+
+  const validationSchema = yup.object({
+    quantity: yup.string().required("Quantity is Requerid"),
+  });
+
+  const initialValues = {
+    quantity: props.quantity,
+  };
+
   return (
     <Dialog
       onClose={props.onClose}
@@ -88,21 +116,43 @@ const SimpleDialog: React.FC<SimpleDialogProps> = (props) => {
       open={open}
     >
       <DialogTitle>{props.product.name}</DialogTitle>
-      <List>
-        <ListItem>
-          <TextField  type="number" placeholder="Quantity"></TextField>
-        </ListItem>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={addProductShoppcart}
+      >
+        {(props) => (
+          <Form>
+            <List>
+              <ListItem>
+                <TextField
+                  error={Object.keys(props.errors).length !== 0}
+                  inputRef={inputEl}
+                  type="number"
+                  placeholder="Quantity"
+                  onChange={props.handleChange}
+                  onBlur={props.handleBlur}
+                  value={props.values.quantity}
+                  name="quantity"
+                ></TextField>
+              </ListItem>
 
-        <ListItem>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={event =>addProductShoppcart(event)}
-          >
-            Ok
-          </Button>
-        </ListItem>
-      </List>
+              <ListItem>
+                <Button
+                  disabled={Object.keys(props.errors).length !== 0}
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  // onClick={addProductShoppcart}
+                  type="submit"
+                >
+                  Ok
+                </Button>
+              </ListItem>
+            </List>
+          </Form>
+        )}
+      </Formik>
     </Dialog>
   );
 };
@@ -112,13 +162,13 @@ const Product: React.FC<ProductProps> = (props) => {
     <React.Fragment>
       <ListItem className="item">
         <ListItemText
-          primary={props.product.name!}
+          primary={props.product.name}
           secondary={
             <React.Fragment>
               <Typography component="span" variant="body2" color="textPrimary">
                 Descrição:
               </Typography>
-              {props.product.descrition!}
+              {props.product.descrition}
             </React.Fragment>
           }
         />
@@ -129,7 +179,7 @@ const Product: React.FC<ProductProps> = (props) => {
             component="span"
             onClick={props.clickedView}
           >
-            <StyledBadge badgeContent={2} color="secondary">
+            <StyledBadge badgeContent={props.addedQuantity} color="secondary">
               <AddShoppingCartIcon />
             </StyledBadge>
           </IconButton>
@@ -142,7 +192,6 @@ const Product: React.FC<ProductProps> = (props) => {
     </React.Fragment>
   );
 };
-
 
 const Search: React.FC<Props> = (props) => {
   const useStyles = makeStyles((theme: Theme) =>
@@ -171,7 +220,7 @@ const Search: React.FC<Props> = (props) => {
         onKeyPress={(ev) => {
           if (ev.key === "Enter") {
             ev.preventDefault();
-            props.onSearchProducts((ev.target as HTMLInputElement).value);
+            props.onSearchProducts();
           }
         }}
       />
@@ -188,26 +237,44 @@ const Search: React.FC<Props> = (props) => {
 
 class ChooseProduct extends Component<Props, State> {
   state = {
+    setedQuantity: "",
     productSelected: {} as IProduct,
     openDialog: false,
+    products: null,
   };
 
-  handlerOpen = (product: IProduct) => {
+  handlerOpen = (product: IProduct, quantity: string) => {
     this.setState({
       openDialog: true,
       productSelected: product,
+      setedQuantity: quantity,
     });
   };
 
+  addProduct = () =>{
+
+  }
   render() {
-    const { searchedProducts } = this.props;
+
+    const { searchedProducts, addedProducts } = this.props;
 
     const products = searchedProducts.map((product) => {
+      const pos = addedProducts.findIndex((p) => p.id === product.id);
+      let quantity = 0;
+
+      if (pos !== -1)
+        quantity = parseInt(addedProducts[pos].quantity as string);
+
       return (
         <Product
+          addedQuantity={quantity}
+          key={product.id}
           product={product}
           clickedView={() => {
-            this.handlerOpen(product);
+            this.handlerOpen(
+              product,
+              quantity === 0 ? "" : quantity.toString()
+            );
           }}
         />
       );
@@ -215,53 +282,49 @@ class ChooseProduct extends Component<Props, State> {
 
     return (
       <div>
-        <Search {...this.props} />
+        <List>
+          <ListItem>
+            <Search {...this.props} />
+          </ListItem>
 
-        {products}
+          {this.props.loadingProduct ? (
+            <ListItem>
+              <CircularProgress style={{ margin: "auto" }} />
+            </ListItem>
+          ) : (
+            products
+          )}
+        </List>
         <SimpleDialog
           product={this.state.productSelected}
+          quantity={this.state.setedQuantity}
           onClose={() => this.setState({ openDialog: false })}
           open={this.state.openDialog}
           {...this.props}
+
         />
       </div>
     );
   }
 }
 
-const getProductStorate = function (): Array<IProduct> {
-  let products = [];
-
-  if (localStorage.getItem("products")) {
-    // ! garante que nunca vai retornar um valornulo
-    products = JSON.parse(localStorage.getItem("products")!);
-  }
-  return products;
-};
-
-const searchProducts = (name: string) => {
-  const result = getProductStorate().filter(
-    (product) => product.name.toLocaleLowerCase().search(name) !== -1
-  );
-  return result;
-};
-
 const mapStateToProps = ({ shoppCart }: ApplicationState) => {
   return {
     searchedProducts: shoppCart.searchedProducts,
+    addedProducts: shoppCart.addedProducts,
+    loadingProduct: shoppCart.loading,
   };
 };
 
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return {
-    onSearchProducts: (name: string) => {
-      const products = searchProducts(name);
-     dispatch(ShoppCartActions.setSearchProducts(products));
+    onSearchProducts: () => {
+      dispatch(ShoppCartActions.loadRequest());
     },
-    onAddProduct: (product: IProduct)=>dispatch(ShoppCartActions.setProductSelected(product)),
-
-    
+     onAddProduct: (product: IProduct) =>
+     dispatch(ShoppCartActions.setProductSelected(product)),
   };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChooseProduct);
+

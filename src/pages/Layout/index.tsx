@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import clsx from "clsx";
 import {
   makeStyles,
@@ -33,7 +33,10 @@ import { Route, Switch } from "react-router-dom";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 
 import ManageOrder from "../ManageOrder/index";
+import WatchLaterIcon from "@material-ui/icons/WatchLater";
 
+import Routes from "../../routes/index";
+import {useAuth}  from "../../contexts/auth"; //import AuthContext from "../../contexts/auth"; transfromamos em hooks
 const drawerWidth = 240;
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -110,7 +113,13 @@ const Layout: React.FC<RouteComponentProps> = (props) => {
     formType: "Register",
   });
 
+  const { signOut } = useAuth()//useContext(AuthContext); // transformamos em hooks
+
   useEffect(() => {
+    /* 
+      Talvez essa lógica pose ser reescrida de uma forma mais eleagente através lógica menos verebosa.
+    */
+
     switch (props.location.pathname) {
       case "/signin":
         changePageTitle("Sign In");
@@ -131,6 +140,10 @@ const Layout: React.FC<RouteComponentProps> = (props) => {
       case "/update-product":
         changePageTitle("Update Product");
         break;
+
+        case "/order":
+          changePageTitle("Order");
+          break;
     }
   }, [props.location.pathname]);
 
@@ -212,7 +225,20 @@ const Layout: React.FC<RouteComponentProps> = (props) => {
             <ListItemText primary="Product" />
           </ListItem>
 
-          <ListItem button onClick={() => props.history.push("/signin")}>
+          <ListItem button onClick={() => props.history.push("/")}>
+            <ListItemIcon>
+              <WatchLaterIcon></WatchLaterIcon>
+            </ListItemIcon>
+            <ListItemText primary="Order Historic" />
+          </ListItem>
+
+          <ListItem
+            button
+            onClick={() => {
+              signOut();
+              props.history.push("/signin");
+            }}
+          >
             <ListItemIcon>
               <ArrowBackIosIcon></ArrowBackIosIcon>
             </ListItemIcon>
@@ -225,18 +251,17 @@ const Layout: React.FC<RouteComponentProps> = (props) => {
           [classes.contentShift]: info.open,
         })}
       >
-        <Switch>
+        {/* <Switch>
           <Route exact path="/" component={SignIn} />
           <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={SignUp} />
           <Route path="/product" component={SearchProduct} />
-          <Route
-            path="/register-product"
-            component={RegisterProduct}
-          />
+          <Route path="/register-product" component={RegisterProduct} />
           <Route path="/update-product" component={RegisterProduct} />
           <Route path="/order" component={ManageOrder} />
-        </Switch>
+        </Switch> */}
+
+        <Routes  {...props}/>
       </main>
     </div>
   );

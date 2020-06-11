@@ -2,7 +2,7 @@ import React, { createContext, useState } from "react";
 
 interface FormContextState {
   type: string;
-  data: {}
+  data: object
 }
 
 interface FormContextDispatch {
@@ -21,8 +21,6 @@ export const FormProvider: React.FC = ({ children }) => {
 
     setForm(formContextDispatch);
   }
-
-
 
   return (
     <FormContext.Provider value={{ type: form.type, data: form.data, setInfoForm:setInfoForm}}>

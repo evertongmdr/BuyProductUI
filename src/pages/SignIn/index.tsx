@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import {
   TextField,
   Button,
@@ -12,12 +13,8 @@ import { Formik, useField, FieldAttributes, Form } from "formik";
 import * as yup from "yup";
 import { NavLink } from "react-router-dom";
 
-import { Route } from "react-router-dom";
-
 import { useTheme } from "@material-ui/core/styles";
-
-import SignUp from "../ManageUser/SignUp/index";
-import SearchProduct from "../ManageProduct/SearchProduct/index";
+import { useAuth } from "../../contexts/auth"; //import AuthContext from "../../contexts/auth";
 
 const MyTextField: React.FC<FieldAttributes<{}>> = ({
   placeholder,
@@ -47,16 +44,22 @@ const validationSchema = yup.object({
     .max(50, "Password must not exceed 50 character"),
 });
 
-
-const SignIn: React.FC = () => {
+const SignIn: React.FC = (props: any) => {
   const theme = useTheme();
+
+  const { user, loading, signIn, userNotFound } = useAuth(); //useContext(AuthContext); transformamos em hooks
+  
+  const handlerSignIn = (email: string, password: string) => {
+    signIn(email, password); // método asincrono
+  };
+
   return (
     <div className="container">
       <Formik
         initialValues={{ email: "", password: "" }}
         validationSchema={validationSchema}
         onSubmit={(data) => {
-      
+          handlerSignIn(data.email, data.password);
         }}
       >
         {({ errors }) => {
@@ -82,10 +85,24 @@ const SignIn: React.FC = () => {
                     name="password"
                   />
                 </ListItem>
+                {loading ? (
+                  <ListItem>
+                    <CircularProgress style={{ margin: "auto" }} />
+                  </ListItem>
+                ) : userNotFound ? (
+                  <ListItem>
+                    {" "}
+                    <div style={{ width: "100%" }}>
+                      <Typography color="error" align="center">
+                        Login ou senha errada
+                      </Typography>
+                    </div>
+                  </ListItem>
+                ) : null}
 
                 <ListItem>
                   <Button
-                    disabled={Object.keys(errors).length !== 0}
+                    disabled={Object.keys(errors).length !== 0 && loading}
                     type="submit"
                     fullWidth
                     variant="contained"
@@ -107,7 +124,6 @@ const SignIn: React.FC = () => {
                         fontWeight: "bold",
                         color: `${theme.palette.primary.dark}`,
                       }}
-                      
                     >
                       SIGN UP
                     </NavLink>
